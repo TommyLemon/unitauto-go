@@ -14,7 +14,7 @@ UnitAuto Go Library for remote dependencies with GitHub repo, etc.
 #### 2. 执行 go get 命令
 #### 2. Run go get command
 ```sh
-	go getgithub.com/TommyLemon/unitauto-go@v1.0.0
+	go get github.com/TommyLemon/unitauto-go@v1.0.0
 ```
 
 <br />
