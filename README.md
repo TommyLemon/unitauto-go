@@ -1,4 +1,4 @@
-# unitauto-go  [![](https://jitpack.io/v/TommyLemon/unitauto-java.svg)](https://jitpack.io/#TommyLemon/unitauto-java)
+# unitauto-go  [![](https://jitpack.io/v/TommyLemon/unitauto-go.svg)](https://jitpack.io/#TommyLemon/unitauto-go)
 UnitAuto Go 库，可通过 GitHub 仓库等远程依赖。<br />
 UnitAuto Go Library for remote dependencies with GitHub repo, etc.
 
@@ -16,3 +16,8 @@ UnitAuto Go Library for remote dependencies with GitHub repo, etc.
 ```sh
 	go getgithub.com/TommyLemon/unitauto-go@v1.0.0
 ```
+
+#### 3. 参考主项目文档来测试
+#### 3. Test by following the main repo
+
+https://github.com/TommyLemon/UnitAuto
