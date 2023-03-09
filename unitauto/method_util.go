@@ -86,8 +86,8 @@ var KEY_CLASS_LIST = "classList"
 var KEY_METHOD_LIST = "methodList"
 
 // 不能在 static 代码块赋值，否则 MethodUtil 子类中 static 代码块对它赋值的代码不会执行！
-var GetInstance = func(typ reflect.Type, classArgs []Argument, reuse bool) (any, error) {
-	return GetInvokeInstance(typ, classArgs, reuse)
+var GetInstance = func(typ reflect.Type, value any, classArgs []Argument, reuse bool) (any, error) {
+	return GetInvokeInstance(typ, value, classArgs, reuse)
 }
 
 var LoadStruct = func(packageOrFileName string, className string, ignoreError bool) (reflect.Type, error) {
@@ -175,7 +175,7 @@ var CLASS_MAP = map[string]any{
 }
 
 var DEFAULT_TYPE_VALUE_MAP = map[string]any{}
-var INSTANCE_MAP = map[reflect.Type]map[string]any{}
+var INSTANCE_MAP = map[reflect.Type]any{}
 
 func GetBool(m map[string]any, k string) bool {
 	if m == nil {
@@ -531,8 +531,8 @@ func InvokeMethod(req map[string]any, instance any, listener Listener[any]) erro
 	var clsArgs = GetArgList(req, KEY_CLASS_ARGS)
 	var methodArgs = GetArgList(req, KEY_METHOD_ARGS)
 
-	if IsEmpty(cttName, true) == false || len(clsArgs) > 0 {
-		err := errors.New("Go 没有构造方法， 不允许传 " + KEY_CONSTRUCTOR + ", " + KEY_CLASS_ARGS + " ！")
+	if IsEmpty(cttName, true) && len(clsArgs) > 0 {
+		err := errors.New("Go 没有构造函数，不允许单独传 " + KEY_CLASS_ARGS + " ，必须配合 " + KEY_CONSTRUCTOR + " 一起用！")
 		completeWithError(pkgName, clsName, methodName, startTime, err, listener)
 		return err
 	}
@@ -541,8 +541,9 @@ func InvokeMethod(req map[string]any, instance any, listener Listener[any]) erro
 	if len(cn) <= 0 {
 		cn = methodName
 	}
-	var typ, err = GetInvokeClass(pkgName, cn)
-	if err != nil || (typ.IsZero() && this_ != nil) {
+	var cls, err = GetInvokeClass(pkgName, cn)
+	fmt.Println("cls = ", cls)
+	if err != nil || (cls == nil && this_ != nil) {
 		if err == nil {
 			err = errors.New("找不到 " + pkgName + "." + cn + " 对应的类！")
 		}
@@ -565,13 +566,19 @@ func InvokeMethod(req map[string]any, instance any, listener Listener[any]) erro
 		instance = args[0]
 	}
 
+	var typ = reflect.TypeOf(cls)
+	fmt.Println("typ = ", typ)
 	if typ.Kind() == reflect.Struct && instance == nil && static_ == false {
 		if IsEmpty(cttName, true) {
-			instance, err = GetInstance(reflect.TypeOf(typ), clsArgs, GetBool(req, KEY_REUSE))
+			instance, err = GetInstance(typ, cls, clsArgs, GetBool(req, KEY_REUSE))
 		} else {
-			instance, err = getInvokeResult(typ, nil, cttName, clsArgs, nil)
+			var cc any
+			if cc, err = GetInvokeClass(pkgName, cttName); err == nil {
+				instance, err = getInvokeResult(reflect.ValueOf(cc), nil, cttName, clsArgs, nil)
+			}
 		}
 	}
+	fmt.Println("instance = ", instance)
 
 	if err == nil {
 		if timeout < 0 || timeout > 60000 {
@@ -594,7 +601,11 @@ func InvokeMethod(req map[string]any, instance any, listener Listener[any]) erro
 		}()
 	}
 
-	return InvokeReflectMethod(typ, instance, pkgName, clsName, methodName, methodArgs, listener)
+	//var fv = reflect.ValueOf(instance)
+	//if instance != nil && fv.IsValid() {
+	//	return InvokeReflectMethod(fv, instance, pkgName, clsName, methodName, methodArgs, listener)
+	//}
+	return InvokeReflectMethod(reflect.ValueOf(cls), instance, pkgName, clsName, methodName, methodArgs, listener)
 }
 
 var InvokeReflectMethod = func(typ reflect.Value, instance any, pkgName string, clsName string, methodName string,
@@ -770,7 +781,7 @@ var GetArgList = func(req map[string]any, arrKey string) []Argument {
  * @return
  * @error
  */
-var GetInvokeClass = func(pkgName string, clsName string) (reflect.Value, error) {
+var GetInvokeClass = func(pkgName string, clsName string) (any, error) {
 	var cls any
 	if len(clsName) <= 0 {
 		cls = CLASS_MAP[pkgName]
@@ -785,19 +796,23 @@ var GetInvokeClass = func(pkgName string, clsName string) (reflect.Value, error)
 		var v = reflect.ValueOf(cls)
 		var k = v.Kind()
 		if k == reflect.Struct || k == reflect.Func {
-			return v, nil
+			return cls, nil
 		}
 	}
 
 	o, err := LoadClass(pkgName, clsName, false)
 	if err != nil {
-		return reflect.Value{}, err
+		return nil, err
 	}
-	return reflect.ValueOf(o), err
+	return o, err
 }
 
 var GetInstanceValue = func(typ reflect.Type) any {
-	return reflect.New(typ)
+	var v = reflect.New(typ)
+	if v.CanConvert(typ) {
+		return v.Convert(typ)
+	}
+	return v.Elem()
 }
 
 /**获取实例
@@ -807,29 +822,17 @@ var GetInstanceValue = func(typ reflect.Type) any {
  * @return
  * @error
  */
-func GetInvokeInstance(typ reflect.Type, classArgs []Argument, reuse bool) (any, error) {
+func GetInvokeInstance(typ reflect.Type, instance any, classArgs []Argument, reuse bool) (any, error) {
 	if typ == nil {
 		return nil, errors.New("typ == nil")
 	}
 
-	//new 出实例
-	var clsMap = INSTANCE_MAP[typ]
-	if clsMap == nil {
-		clsMap = map[string]any{}
-		INSTANCE_MAP[typ] = clsMap
+	if len(classArgs) > 0 {
+		return nil, errors.New("Go 没有构造函数，不允许单独传 " + KEY_CLASS_ARGS + " ，必须配合 " + KEY_CONSTRUCTOR + " 一起用！")
 	}
 
-	var key = ""
-	if len(classArgs) <= 0 {
-		var err error
-		if key, err = ToJSONString(classArgs); err != nil {
-			key = ""
-		}
-	}
-
-	var instance any = nil
-	if reuse { //必须精确对应值，否则去除缓存的和需要的很可能不符
-		instance = clsMap[key]
+	if reuse && instance == nil { //必须精确对应值，否则去除缓存的和需要的很可能不符
+		instance = INSTANCE_MAP[typ]
 	}
 
 	if instance == nil {
@@ -883,7 +886,7 @@ func GetInvokeInstance(typ reflect.Type, classArgs []Argument, reuse bool) (any,
 			return nil, errors.New("找不到 " + typ.String() + " 以及 classArgs 对应的构造方法！")
 		}
 
-		clsMap[key] = instance
+		INSTANCE_MAP[typ] = instance
 	}
 
 	return instance, nil
@@ -1600,7 +1603,7 @@ func initTypesAndValues(methodArgs []Argument, types []reflect.Type, args []any,
 
 		if value == nil {
 			var err error
-			if value, err = GetInstance(typ, nil, argObj.Reuse); err != nil {
+			if value, err = GetInstance(typ, value, nil, argObj.Reuse); err != nil {
 				fmt.Println(err.Error())
 			}
 		}
@@ -2089,8 +2092,8 @@ func parseJSON(typ string, value any) map[string]any {
 	if value == nil || isBooleanOrNumberOrString(value) {
 		o[KEY_VALUE] = value
 	} else {
-		if v, err := json.Marshal(value); err == nil {
-			o[KEY_VALUE] = v
+		if _, err := json.Marshal(value); err == nil {
+			o[KEY_VALUE] = value
 		} else {
 			fmt.Println(err.Error())
 			o[KEY_VALUE] = fmt.Sprint(value)

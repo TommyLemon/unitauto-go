@@ -29,6 +29,7 @@ func main() {
 	unitauto.CLASS_MAP["unitauto.test.Multiply"] = test.Multiply
 	unitauto.CLASS_MAP["unitauto.test.Divide"] = test.Divide
 	unitauto.CLASS_MAP["unitauto.test.ComputeAsync"] = test.ComputeAsync
+	unitauto.CLASS_MAP["unitauto.test.New"] = test.New
 	unitauto.CLASS_MAP["unitauto.test.Test"] = test.Test{
 		Id:   1,
 		Name: "UnitAuto",
@@ -39,6 +40,10 @@ func main() {
 	//	return a + b
 	//}
 	//unitauto.CLASS_MAP["callback(int,int)"] = reflect.FuncOf([]reflect.Type{reflect.TypeOf(0), reflect.TypeOf(0)}, []reflect.Type{reflect.TypeOf(0)}, false)
+
+	for _, v := range unitauto.CLASS_MAP {
+		unitauto.INSTANCE_MAP[reflect.TypeOf(v)] = v
+	}
 
 	http.HandleFunc("/method/list", handle)
 	http.HandleFunc("/method/invoke", handle)
@@ -92,6 +97,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 				if respBody, err := json.Marshal(data); err != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 				} else {
+					fmt.Println("respBody = ", string(respBody))
 					w.Header().Set("Content-Length", "-1")
 					w.Header().Set("Transfer-Encoding", "true")
 					_, err2 := w.Write(respBody)

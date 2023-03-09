@@ -22,7 +22,7 @@ func Multiply(a float32, b float32) float64 {
 }
 
 func Divide(a float64, b float64) float64 {
-	return a * b
+	return a / b
 }
 
 func ComputeAsync(a int, b int, callback func(a int, b int) int) int {
@@ -62,4 +62,13 @@ func (test Test) SetName(name string) {
 
 func (test Test) String() string {
 	return "{id: " + fmt.Sprint(test.Id) + ", name: " + test.Name + "}"
+}
+
+//	func New() *Test {
+//		return new(Test)
+//	}
+func New() Test {
+	return Test{
+		Name: "Test",
+	}
 }
