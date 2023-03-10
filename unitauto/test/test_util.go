@@ -40,8 +40,8 @@ func ComputeAsync(a int, b int, callback func(a int, b int) int) int {
 }
 
 type Test struct {
-	Id   int
-	Name string
+	Id   int    `json:"Id"`
+	Name string `json:"Name"`
 }
 
 func (test Test) GetId() int {
@@ -62,6 +62,16 @@ func (test Test) SetName(name string) {
 
 func (test Test) String() string {
 	return "{id: " + fmt.Sprint(test.Id) + ", name: " + test.Name + "}"
+}
+
+func Compare(t1 Test, t2 Test) int {
+	if t1.Id == t2.Id {
+		return 0
+	}
+	if t1.Id < t2.Id {
+		return -1
+	}
+	return 1
 }
 
 //	func New() *Test {
