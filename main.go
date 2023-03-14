@@ -35,23 +35,41 @@ func Init() {
 	unitauto.CLASS_MAP["unitauto.test.ComputeAsync"] = test.ComputeAsync
 	unitauto.CLASS_MAP["unitauto.test.New"] = test.New
 	unitauto.CLASS_MAP["unitauto.test.Compare"] = test.Compare
+	unitauto.CLASS_MAP["unitauto.test.TestInterfaceCallback"] = test.TestInterfaceCallback
 	unitauto.CLASS_MAP["unitauto.test.Test"] = test.Test{}
+	unitauto.CLASS_MAP["unitauto.test.CallbackImpl"] = test.CallbackImpl{}
+	unitauto.CLASS_MAP["main.Proxy"] = Proxy{}
 
 	// Struct 实例需要转换
 	var GetInstanceVal = unitauto.GetInstanceValue
-	unitauto.GetInstanceValue = func(typ reflect.Type, val any, reuse bool) (any, bool) {
+	unitauto.GetInstanceValue = func(typ reflect.Type, val any, reuse bool, proxy unitauto.InterfaceProxy) (any, bool) {
 		if !reuse {
 			if typ.AssignableTo(reflect.TypeOf(test.Test{})) {
 				toV, err := unitauto.Convert[test.Test](val, test.Test{})
 				return toV, err == nil
 			}
+			if typ.AssignableTo(reflect.TypeOf(test.CallbackImpl{})) {
+				toV, err := unitauto.Convert[test.CallbackImpl](val, test.CallbackImpl{})
+				return toV, err == nil
+			}
+			if typ.AssignableTo(reflect.TypeOf(Proxy{})) {
+				toV, err := unitauto.Convert[Proxy](val, Proxy{
+					InterfaceProxy: proxy,
+				})
+				toV.InterfaceProxy = proxy
+				return toV, err == nil
+			}
+			if typ.AssignableTo(reflect.TypeOf(&Proxy{})) {
+				var toV = &Proxy{}
+				switch val.(type) {
+				case unitauto.InterfaceProxy:
+					toV.InterfaceProxy = val.(unitauto.InterfaceProxy)
+				}
+				return toV, true
+			}
 			//TODO 加上其它的
-			//if typ.AssignableTo(reflect.TypeOf(test.Test{})) {
-			//	toV, err := unitauto.Convert[test.Test](val, test.Test{})
-			//	return toV, err == nil
-			//}
 		}
-		return GetInstanceVal(typ, val, reuse)
+		return GetInstanceVal(typ, val, reuse, proxy)
 	}
 
 	// 取消注释来提升性能
@@ -60,7 +78,57 @@ func Init() {
 	//}
 }
 
+type noCopy struct{}
+
+func (*noCopy) Lock() {
+}
+func (*noCopy) Unlock() {
+}
+
+type Proxy struct {
+	_ noCopy
+	unitauto.InterfaceProxy
+}
+
+func (p Proxy) OnSuccess(data any) {
+	fmt.Println("OnSuccess data = ", data)
+	//p.Invoke(reflect.ValueOf(Proxy.OnSuccess), []reflect.Value{reflect.ValueOf(data)})
+
+	p.Invoke("OnSuccess(any)", []any{data})
+}
+func (p Proxy) OnFailure(err error) {
+	fmt.Println("OnFailure err = ", err)
+	//p.Invoke(reflect.ValueOf(Proxy.OnFailure), []reflect.Value{reflect.ValueOf(err)})
+	p.Invoke("OnFailure(error)", []any{err})
+}
+
+//func myTime() time.Time {
+//	return time.Date(2022, 1, 1, 0, 0, 0, 0, &time.Location{})
+//}
+//
+//func originFunc() {
+//	str := "Hi, origin func"
+//	fmt.Println(str)
+//}
+//func monkeyFunc() {
+//	str := "Hi, monkey func"
+//	fmt.Println(str)
+//	trampolineFunc()
+//}
+//func trampolineFunc() {
+//}
+
 func main() {
+	// FIXME panic
+	//originFunc()
+	//fmt.Println("-------")
+	//gohook.Hook(originFunc, monkeyFunc, trampolineFunc)
+	//originFunc()
+	//
+	//fmt.Println(time.Now())
+	//gohook.Hook(time.Now, myTime, nil)
+	//fmt.Println(time.Now())
+
 	if isInit {
 		Init()
 	}

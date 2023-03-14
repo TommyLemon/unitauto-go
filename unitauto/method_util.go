@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	orderedmap "github.com/TommyLemon/unitauto-go/iancoleman"
+	"github.com/TommyLemon/unitauto-go/unitauto/test"
 	"go/importer"
 	"go/token"
 	"go/types"
@@ -63,6 +64,7 @@ var KEY_THIS = "this"
 var KEY_CLASS = "class"
 var KEY_CONSTRUCTOR = "constructor"
 var KEY_TYPE = "type"
+var KEY_AT_TYPE = "@type"
 var KEY_VALUE = "value"
 var KEY_WARN = "warn"
 var KEY_STATIC = "static"
@@ -757,7 +759,10 @@ var GetArgList = func(req map[string]any, arrKey string) []Argument {
 		} else if t == TYPE_MAP_STRING_ANY {
 			var m = item.(map[string]any)
 			var agt = Argument{}
-			agt.Type = GetStr(m, KEY_TYPE)
+			agt.Type = GetStr(m, KEY_AT_TYPE)
+			if len(agt.Type) <= 0 {
+				agt.Type = GetStr(m, KEY_TYPE)
+			}
 			agt.Value = m[KEY_VALUE]
 			agt.Reuse = GetBool(m, KEY_REUSE)
 			agt.Global = GetBool(m, KEY_GLOBAL)
@@ -765,7 +770,10 @@ var GetArgList = func(req map[string]any, arrKey string) []Argument {
 		} else if t == TYPE_MAP_STRING_INTERFACE {
 			var m = item.(map[string]interface{})
 			var agt = Argument{}
-			agt.Type = GetStr(m, KEY_TYPE)
+			agt.Type = GetStr(m, KEY_AT_TYPE)
+			if len(agt.Type) <= 0 {
+				agt.Type = GetStr(m, KEY_TYPE)
+			}
 			agt.Value = m[KEY_VALUE]
 			agt.Reuse = GetBool(m, KEY_REUSE)
 			agt.Global = GetBool(m, KEY_GLOBAL)
@@ -870,7 +878,7 @@ var GetInvokeClass = func(pkgName string, clsName string) (any, error) {
 	return o, err
 }
 
-var GetInstanceValue = func(typ reflect.Type, val any, reuse bool) (any, bool) {
+var GetInstanceValue = func(typ reflect.Type, val any, reuse bool, proxy InterfaceProxy) (any, bool) {
 	if val != nil && typ == reflect.TypeOf(val) {
 		return val, true
 	}
@@ -956,7 +964,7 @@ func GetInvokeInstance(typ reflect.Type, instance any, classArgs []Argument, reu
 	if instance == nil {
 		//var size = len(classArgs)
 		//if (size <= 0) {
-		instance, _ = GetInstanceValue(typ, nil, reuse) // new(typ)
+		instance, _ = GetInstanceValue(typ, nil, reuse, InterfaceProxy{}) // new(typ)
 		//} else { //通过构造方法
 		//	var exactContructor = false  //指定某个构造方法，只要某一项 typ 不为空就是
 		//	for i := 0; i < size; i++ {
@@ -1092,11 +1100,11 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 	//	return nil, errors.New("methodName == " + methodName + " not found")
 	//}
 
-	var startTime = []int64{time.Now().UnixMilli()} // 必须在 onItemComplete 前初始化，但又得在后面重新赋值以获得最准确的时间
+	var startTime = time.Now().UnixMilli() // 必须在 onItemComplete 前初始化，但又得在后面重新赋值以获得最准确的时间
 
 	var onItemComplete Listener[any] = func(data any, method_ *reflect.Method, proxy *InterfaceProxy, extras ...any) error {
 		var endTime = time.Now().UnixMilli()
-		var duration = endTime - startTime[0]
+		var duration = endTime - startTime
 
 		fmt.Println("getInvokeResult  " + reflect.ValueOf(method).String() + " endTime = " + fmt.Sprint(endTime) + "  duration = " + fmt.Sprint(duration) + ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n\n\n")
 
@@ -1140,57 +1148,57 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 				//无效	if (v != nil && v.getClass() == reflect.TypeOf(InterfaceProxy{})) { // v instanceof InterfaceProxy) { // v.getClass().isInterface()) {
 
 				////解决只有 interface getter 方法才有对应字段返回
-				if t.Kind() == reflect.Array || t.Kind() == reflect.Slice {
-					//a := v.([]any)
-					//if (t.getComponentType() != nil && t.getComponentType().isInterface()) {
-					//	v = ParseArr(v.toString())
-					//}
-				} else if t.Kind() == reflect.Func {
-					//m := map[string]any{}
-					//
-					//s := t.Name() + "("
-					//for i := 0; i < t.NumIn(); i++ {
-					//	if i <= 0 {
-					//		s += t.In(i).String()
-					//	} else {
-					//		s += "," + t.In(i).String()
-					//	}
-					//}
-					//s += ")"
-					//
-					//m[s] = map[string]any{
-					//	"type": reflect.TypeOf(t).Name(),
-					//}
-					//
-					//v = m
-
-					finalMethodArgs = append(finalMethodArgs, v)
-					continue
-				} else if t.Kind() == reflect.Interface {
-					//m := map[string]any{}
-					//for i := 0; i < t.NumMethod(); i++ {
-					//	mth := t.Method(i)
-					//
-					//	s := mth.Name + "("
-					//	var mt = reflect.TypeOf(m)
-					//	for j := 0; j < mt.NumIn(); j++ {
-					//		if j <= 0 {
-					//			s += mt.In(j).String()
-					//		} else {
-					//			s += "," + mt.In(j).String()
-					//		}
-					//	}
-					//	s += ")"
-					//
-					//	m[s] = map[string]any{
-					//		"type": mt.Name(),
-					//	}
-					//}
-					//
-					//v = m
-					finalMethodArgs = append(finalMethodArgs, v)
-					continue
-				}
+				//if t.Kind() == reflect.Array || t.Kind() == reflect.Slice {
+				//	//a := v.([]any)
+				//	//if (t.getComponentType() != nil && t.getComponentType().isInterface()) {
+				//	//	v = ParseArr(v.toString())
+				//	//}
+				//} else if t.Kind() == reflect.Func {
+				//	//m := map[string]any{}
+				//	//
+				//	//s := t.Name() + "("
+				//	//for i := 0; i < t.NumIn(); i++ {
+				//	//	if i <= 0 {
+				//	//		s += t.In(i).String()
+				//	//	} else {
+				//	//		s += "," + t.In(i).String()
+				//	//	}
+				//	//}
+				//	//s += ")"
+				//	//
+				//	//m[s] = map[string]any{
+				//	//	"type": reflect.TypeOf(t).Name(),
+				//	//}
+				//	//
+				//	//v = m
+				//
+				//	finalMethodArgs = append(finalMethodArgs, v)
+				//	continue
+				//} else if t.Kind() == reflect.Interface {
+				//	//m := map[string]any{}
+				//	//for i := 0; i < t.NumMethod(); i++ {
+				//	//	mth := t.Method(i)
+				//	//
+				//	//	s := mth.Name + "("
+				//	//	var mt = reflect.TypeOf(m)
+				//	//	for j := 0; j < mt.NumIn(); j++ {
+				//	//		if j <= 0 {
+				//	//			s += mt.In(j).String()
+				//	//		} else {
+				//	//			s += "," + mt.In(j).String()
+				//	//		}
+				//	//	}
+				//	//	s += ")"
+				//	//
+				//	//	m[s] = map[string]any{
+				//	//		"type": mt.Name(),
+				//	//	}
+				//	//}
+				//	//
+				//	//v = m
+				//	finalMethodArgs = append(finalMethodArgs, v)
+				//	continue
+				//}
 
 				//args[i] = v
 				finalMethodArgs = append(finalMethodArgs, parseJSON(t.String(), v))
@@ -1198,7 +1206,7 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 		}
 
 		result[KEY_METHOD_ARGS] = finalMethodArgs
-		result[KEY_TIME_DETAIL] = fmt.Sprint(startTime[0]) + "|" + fmt.Sprint(duration) + "|" + fmt.Sprint(endTime)
+		result[KEY_TIME_DETAIL] = fmt.Sprint(startTime) + "|" + fmt.Sprint(duration) + "|" + fmt.Sprint(endTime)
 
 		if listener != nil {
 			err := listener(result, nil, nil)
@@ -1253,6 +1261,7 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 			var value = methodArgs[i].Value
 
 			if reflect.TypeOf(value).Kind() == reflect.Map {
+
 				//var proxy = value.(map[string]any)
 
 				//for _, key := range proxy.Keys() {
@@ -1265,16 +1274,180 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 					start = strings.Index(key, "(")
 				}
 				if start < 1 || !IsName(key[0:start]) {
+					for ck, cv := range value.(map[string]any) {
+						switch cv.(type) {
+						case map[string]any:
+							var start2 = -1
+							var end2 = strings.LastIndex(ck, ")")
+							if end2 > 2 {
+								start2 = strings.Index(ck, "(")
+							}
+							if start2 < 1 || !IsName(ck[0:start2]) {
+								continue
+							}
+							var fcc = GetBool(cv.(map[string]any), KEY_CALLBACK)
+							if fcc {
+								isSync = false
+							}
+						}
+
+						if !isSync {
+							break
+						}
+					}
+
 					if v, err2 := cast(args[i], types[i]); err2 == nil {
 						switch v.(type) {
 						case reflect.Value:
 							pl[i] = v.(reflect.Value)
 						default:
-							pl[i] = reflect.ValueOf(v)
-						}
+							var ip = InterfaceProxy{}
+							var tt = reflect.TypeOf(ip)
+							fmt.Println("tt = ", tt)
 
+							var rt = reflect.TypeOf(v)
+							var rv = reflect.ValueOf(v)
+							fmt.Println("rt = ", rt)
+							fmt.Println("rv = ", rv)
+							fmt.Println("rv.Type() = ", rv.Type())
+
+							var ipf, exist = rt.FieldByName("InterfaceProxy")
+							if !exist {
+								for j := 0; j < rt.NumField(); j++ {
+									var f = rt.Field(j)
+									if f.Type == tt {
+										ipf = f
+										exist = true
+										break
+									}
+								}
+							}
+
+							fmt.Println("ipf = ", ipf)
+							if exist {
+
+								//var cbm, exist = rt.FieldByName("CallbackMap")
+								//fmt.Println("cbm = ", cbm)
+								//
+								//fmt.Println("exist = ", exist)
+								//fmt.Println("cbm.Type = ", cbm.Type)
+								//for j := 0; j < cbm.Type.NumMethod(); j++ {
+								//	fmt.Println("cbm.Type.Method(", j, ") = ", cbm.Type.Method(j))
+								//}
+								//var setMethod, exist3 = cbm.Type.MethodByName("Set")
+								//fmt.Println("setMethod = ", setMethod)
+								//fmt.Println("exist3 = ", exist3)
+
+								//for j := 0; j < rt.NumMethod(); j++ {
+								//	fmt.Println("rt.Method(", j, ") = ", rt.Method(j))
+								//}
+								//for j := 0; j < rv.NumMethod(); j++ {
+								//	fmt.Println("rv.Method(", j, ") = ", rv.Method(j))
+								//}
+
+								//for j := 0; j < rt.NumMethod(); j++ {
+								//var tm, exist2 = rt.MethodByName("PutCallback")
+								//fmt.Println("tm = ", tm)
+								//fmt.Println("exist2 = ", exist2)
+								//var m = rv.MethodByName("PutCallback")
+								//fmt.Println("rv.MethodByName(\"PutCallback\") = ", m)
+								//fmt.Println("m = ", m)
+								////fmt.Println("m.Name = ", m.Name)
+								////fmt.Println("m.Func = ", m.Func)
+
+								var lm = map[string]Listener[any]{}
+								//var ltr = reflect.ValueOf(onItemComplete)
+								//if m.IsValid() { // == reflect.ValueOf(InterfaceProxy.PutCallback) {
+								for ck, cv := range value.(map[string]any) {
+									switch cv.(type) {
+									case map[string]any:
+										var start2 = -1
+										var end2 = strings.LastIndex(ck, ")")
+										if end2 > 2 {
+											start2 = strings.Index(ck, "(")
+										}
+										if start2 < 1 || !IsName(ck[0:start2]) {
+											continue
+										}
+										var fcc = GetBool(cv.(map[string]any), KEY_CALLBACK)
+										//if fcc {
+										//setMethod.Func.Call([]reflect.Value{reflect.ValueOf(ck), ltr})
+										//m.Call([]reflect.Value{reflect.ValueOf(ck), ltr})
+										//tm.Func.Call([]reflect.Value{reflect.ValueOf(ck), ltr})
+										var callbackIndex = i
+
+										lm[ck] = func(data any, method *reflect.Method, proxy *InterfaceProxy, extras ...any) error {
+											//var callTime = time.Now().UnixMilli()
+											var fcm = value.(map[string]any)
+
+											var cm = GetArr(fcm, KEY_CALL_MAP)
+											var cl = GetArr(fcm, KEY_CALL_LIST)
+
+											var cm2, exist = proxy.Get(KEY_CALL_MAP)
+											if exist {
+												fcm[KEY_CALL_MAP] = append(cm, cm2)
+											}
+											var cl2, exist3 = proxy.Get(KEY_CALL_LIST)
+											if exist3 {
+												fcm[KEY_CALL_LIST] = append(cl, cl2)
+											}
+
+											//args[callbackIndex] = map[string]any{
+											//	"type":  key,
+											//	"value": fcm,
+											//}
+
+											args[callbackIndex] = fcm
+
+											if fcc {
+												return onItemComplete(data, method, proxy, extras)
+											}
+											return nil
+										}
+										//}
+									}
+								}
+
+								ip.CallbackMap = lm
+
+								var fv, _ = GetInstanceValue(types[i], v, false, ip)
+								pl[i] = reflect.ValueOf(fv)
+							} else {
+								//}
+								//}
+
+								//for j := 0; j < rt.NumField(); j++ {
+								//	var f = rt.Field(j)
+								//	rt = f.Type
+								//	fmt.Println("rt = ", rt)
+								//	if tt == rt || rv.CanConvert(tt) || rv.Type().AssignableTo(tt) || rv.Type().AssignableTo(tt) || rt.AssignableTo(tt) || tt.AssignableTo(rt) {
+								//		var p = v.(InterfaceProxy) // v.(InterfaceProxy)
+								//		for ck, cv := range value.(map[string]any) {
+								//			switch cv.(type) {
+								//			case map[string]any:
+								//				var start2 = -1
+								//				var end2 = strings.LastIndex(ck, ")")
+								//				if end2 > 2 {
+								//					start2 = strings.Index(ck, "(")
+								//				}
+								//				if start2 < 1 || !IsName(ck[0:start2]) {
+								//					continue
+								//				}
+								//				var fcc = GetBool(cv.(map[string]any), KEY_CALLBACK)
+								//				if fcc {
+								//					p.PutCallback(ck, onItemComplete)
+								//				}
+								//			}
+								//		}
+								//	}
+								//}
+
+								pl[i] = rv // reflect.ValueOf(v)
+							}
+						}
 					} else {
 						fmt.Println(err2.Error())
+						pl[i] = reflect.Zero(types[i])
 					}
 					continue
 				}
@@ -1397,10 +1570,12 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 					}
 					fcm[KEY_CALL_MAP] = append(cm, callInfo)
 
-					args[callbackIndex] = map[string]any{
-						"type":  key,
-						"value": fcm,
-					}
+					//args[callbackIndex] = map[string]any{
+					//	"type":  key,
+					//	"value": fcm,
+					//}
+
+					args[callbackIndex] = fcm
 
 					var rl = len(rs)
 					if rl != len(outTypes) {
@@ -1449,7 +1624,7 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 				//}
 
 				//if isSync {
-				//	isSync = len(proxy.callbackMap) <= 0
+				//	isSync = len(proxy.CallbackMap) <= 0
 				//}
 			} else {
 				if v, err2 := cast(args[i], types[i]); err2 == nil {
@@ -1473,8 +1648,8 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 	//	args = append(instance, args...)
 	//}
 
-	startTime[0] = time.Now().UnixMilli() // 排除前面初始化参数的最准确时间
-	fmt.Println("getInvokeResult  " + method.String() + " startTime = " + fmt.Sprint(startTime[0]) +
+	startTime = time.Now().UnixMilli() // 排除前面初始化参数的最准确时间
+	fmt.Println("getInvokeResult  " + method.String() + " startTime = " + fmt.Sprint(startTime) +
 		"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n\n ")
 
 	var vals = method.Call(pl)
@@ -2232,6 +2407,11 @@ func parseJSON(typ string, value any) map[string]any {
 	if value == nil || isBooleanOrNumberOrString(value) {
 		o[KEY_VALUE] = value
 	} else {
+		switch value.(type) {
+		case error:
+			value = value.(error).Error()
+		}
+
 		if _, err := json.Marshal(value); err == nil {
 			o[KEY_VALUE] = value
 		} else {
@@ -2281,7 +2461,7 @@ func trimReflectType(typ reflect.Type) string {
 	return trimType(typ.Name())
 }
 func trimType(name string) string {
-	if "void" == (name) {
+	if name == "nil" {
 		return ""
 	}
 
@@ -2458,8 +2638,8 @@ func getType(name string, value any, defaultType bool) (reflect.Type, error) {
 
 var TYPE_INTERFACE_PROXY = reflect.TypeOf(InterfaceProxy{})
 var TYPE_FUNC = reflect.TypeOf(func() {})
-var TYPE_METHOD = reflect.TypeOf(InterfaceProxy.GetType)
-var TYPE_ANY = reflect.TypeOf(nil)
+var TYPE_METHOD = reflect.TypeOf(test.Test.GetId)
+var TYPE_ANY = reflect.TypeOf((any)(nil))
 var TYPE_INTERFACE = TYPE_ANY
 var TYPE_BOOL = reflect.TypeOf(false)
 var TYPE_INT = reflect.TypeOf(int(0))
@@ -2775,7 +2955,7 @@ func cast(obj any, typ reflect.Type) (any, error) {
 		var bytes, err = json.Marshal(obj)
 		if err == nil {
 			fmt.Println("string(bytes) = ", string(bytes))
-			var ret, isFinal = GetInstanceValue(typ, obj, false)
+			var ret, isFinal = GetInstanceValue(typ, obj, false, InterfaceProxy{})
 			if isFinal {
 				return ret, nil
 			}
@@ -3067,11 +3247,35 @@ func NewArgument(typ string, value any) Argument {
  * TODO 应该在 ParseMap(json, typ) 时代理 typ 内所有的 interface
  */
 type InterfaceProxy struct {
+	_ noCopy
 	orderedmap.OrderedMap
+	//OrderedMap map[string]any
 	//reflect.Value
 	Type        reflect.Type
-	callbackMap map[string]Listener[any]
+	CallbackMap map[string]Listener[any] // orderedmap.OrderedMap //
 }
+
+type noCopy struct{}
+
+func (*noCopy) Lock() {
+}
+func (*noCopy) Unlock() {
+}
+
+//func (ip *InterfaceProxy) Get(key string) (any, bool) {
+//	if ip.OrderedMap == nil {
+//		return nil, false
+//	}
+//	var v = ip.OrderedMap[key]
+//	return v, true
+//}
+//
+//func (ip *InterfaceProxy) Set(key string, val any) {
+//	if ip.OrderedMap == nil {
+//		ip.OrderedMap = map[string]any{}
+//	}
+//	ip.OrderedMap[key] = val
+//}
 
 func (ip InterfaceProxy) GetType() reflect.Type {
 	return ip.Type
@@ -3082,40 +3286,53 @@ func (ip InterfaceProxy) SetType(typ reflect.Type) {
 }
 
 func (ip InterfaceProxy) GetCallback(method string) Listener[any] {
-	return ip.callbackMap[method]
+	if ip.CallbackMap == nil {
+		return nil
+	}
+	return ip.CallbackMap[method]
+	//var l, b = ip.CallbackMap.Get(method)
+	//if b {
+	//	return l.(Listener[any])
+	//}
+	//return nil
 }
 
 func (ip InterfaceProxy) PutCallback(method string, callback Listener[any]) {
-	ip.callbackMap[method] = callback
-}
-
-func (ip InterfaceProxy) Invoke(method reflect.Method, args []reflect.Value) (any, error) {
-	mv := reflect.TypeOf(method)
-	var types = make([]reflect.Type, mv.NumIn())
-	for i := 0; i < mv.NumIn(); i++ {
-		types[i] = mv.In(i)
+	if ip.CallbackMap == nil {
+		ip.CallbackMap = map[string]Listener[any]{}
 	}
-
-	return ip.onInvoke(method, types, args, true)
+	ip.CallbackMap[method] = callback
+	//ip.CallbackMap.Set(method, callback)
 }
 
-func (ip InterfaceProxy) onInvoke(method reflect.Method, types []reflect.Type, args []reflect.Value, callSuper bool) (any, error) {
+func (ip *InterfaceProxy) Invoke(method string, args []any) (any, error) {
+	//mv := reflect.TypeOf(method)
+	//var types = make([]reflect.Type, mv.NumIn())
+	//for i := 0; i < mv.NumIn(); i++ {
+	//	types[i] = mv.In(i)
+	//}
+
+	return ip.OnInvoke(method, nil, args, true)
+}
+
+func (ip *InterfaceProxy) OnInvoke(method string, types []reflect.Type, args []any, callSuper bool) (any, error) {
 	//if method == nil {
 	//	return nil, nil
 	//}
 
-	var name = method.Name
-	if name == "" {
-		return nil, nil
-	}
+	//var name = method.String() // method.Name
+	//if name == "" {
+	//	return nil, nil
+	//}
 
-	var key = name + "(" + ArrToString(trimTypes(types)) + ")" // 带修饰符，太长 method.toGenericString()
+	//var key = name + "(" + strings.Join(trimTypes(types), ",") + ")" // 带修饰符，太长 method.toGenericString()
+	var key = method // .String()
 	var handlerValue, exists = ip.Get(key)
 
 	typeStr := ""
 	var value any = nil     // callSuper ? super.invoke(proxy, method, args) : nil
 	if callSuper == false { //TODO default 方法如何执行里面的代码块？可能需要参考热更新，把方法动态加进去
-		value = method.Func.Call(args)
+		//FIXME value = method.Func.Call(args)
 		if value == nil || len(value.([]reflect.Value)) <= 0 { //正常情况不会进这个分支，因为 interface 中 static 方法不允许用实例来调用
 
 		} else {
@@ -3134,18 +3351,19 @@ func (ip InterfaceProxy) onInvoke(method reflect.Method, types []reflect.Type, a
 	methodObj[KEY_TIME] = time.Now().UnixMilli()
 	methodObj[KEY_RETURN] = value
 
-	var finalMethodArgs = list.New()
+	var finalMethodArgs = make([]any, len(args)) // list.New()
 	if args != nil {
-		finalMethodArgs = list.New()
+		//finalMethodArgs = list.New()
 
 		for i := 0; i < len(args); i++ {
 			var v = args[i]
 			var t = "any"
-			if !v.IsZero() {
+			if v != nil { // !v.IsZero() {
 				t = reflect.TypeOf(v).String()
 			}
 
-			finalMethodArgs.PushBack(parseJSON(t, v))
+			//finalMethodArgs.PushBack(parseJSON(t, v))
+			finalMethodArgs[i] = parseJSON(t, v)
 		}
 	}
 	methodObj[KEY_METHOD_ARGS] = finalMethodArgs
@@ -3171,14 +3389,22 @@ func (ip InterfaceProxy) onInvoke(method reflect.Method, types []reflect.Type, a
 		methodObj2[k] = v
 	}
 
-	var lst = GetJSONList(ip.OrderedMap, KEY_CALL_LIST)
-	lst.PushBack(methodObj2) //顺序，因为要直观看到调用过程
+	var lst, exist = ip.Get(KEY_CALL_LIST)
+	if !exist {
+		lst = []any{}
+	}
+
+	//var lst = GetArr(ip.OrderedMap, KEY_CALL_LIST) // var lst = GetJSONList(ip.OrderedMap, KEY_CALL_LIST)
+	lst = append(lst.([]any), methodObj2) //lst.PushBack(methodObj2) //顺序，因为要直观看到调用过程
 	ip.Set(KEY_CALL_LIST, lst)
 
 	//是否被设置为 HTTP 回调方法
 	var listener = ip.GetCallback(key)
 	if listener != nil { //提前判断 && handler.getBooleanValue(KEY_CALLBACK)) {
-		listener(nil, nil, nil)
+		err := listener(value, nil, ip)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	typ, err := getType(typeStr, value, true)
