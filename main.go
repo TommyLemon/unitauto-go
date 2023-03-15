@@ -10,6 +10,8 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"regexp"
+	"time"
 )
 
 var port = 8082
@@ -21,11 +23,12 @@ func Init() {
 	// TODO 改成你项目的 module 路径  unitauto.DEFAULT_MODULE_PATH = "github.com/TommyLemon/unitauto-go"
 	// 如果没有改，则以下注册时需要传完整的路径，例如 github.com/TommyLemon/unitauto-go/unitauto.test.Hello
 
-	// Struct/Func 需要注册
+	// Struct/Func 需要注册，可通过调用 POST /method/list 接口来生成以下代码，然后复制 ginCode 代码到自己项目中
 	unitauto.CLASS_MAP["fmt.Sprint"] = fmt.Sprint
-	unitauto.CLASS_MAP["fmt.Append"] = fmt.Append
 	unitauto.CLASS_MAP["fmt.Print"] = fmt.Print
 	unitauto.CLASS_MAP["fmt.Errorf"] = fmt.Errorf
+	unitauto.CLASS_MAP["time.Unix"] = time.Unix
+	unitauto.CLASS_MAP["regexp.MatchString"] = regexp.MatchString
 
 	unitauto.CLASS_MAP["unitauto.test.Hello"] = test.Hello
 	unitauto.CLASS_MAP["unitauto.test.Add"] = test.Add
@@ -78,6 +81,7 @@ func Init() {
 	//}
 }
 
+// FIXME 看起来 noCopy 没有生效
 type noCopy struct{}
 
 func (*noCopy) Lock() {
@@ -85,50 +89,31 @@ func (*noCopy) Lock() {
 func (*noCopy) Unlock() {
 }
 
+// interface{ func } 需要通过以下方式来注册和模拟
+
 type Proxy struct {
-	_ noCopy
+	_ noCopy // 如果 Proxy 内没有任何成员变量被修改值，则不需要
 	unitauto.InterfaceProxy
 }
+
+// 如果已经定义了 struct 和 method，也可以直接在现有的 method 中调用 InterfaceProxy.Invoke
 
 func (p Proxy) OnSuccess(data any) {
 	fmt.Println("OnSuccess data = ", data)
 	//p.Invoke(reflect.ValueOf(Proxy.OnSuccess), []reflect.Value{reflect.ValueOf(data)})
 
+	// 必须调用
 	p.Invoke("OnSuccess(any)", []any{data})
 }
 func (p Proxy) OnFailure(err error) {
 	fmt.Println("OnFailure err = ", err)
 	//p.Invoke(reflect.ValueOf(Proxy.OnFailure), []reflect.Value{reflect.ValueOf(err)})
+
+	// 必须调用
 	p.Invoke("OnFailure(error)", []any{err})
 }
 
-//func myTime() time.Time {
-//	return time.Date(2022, 1, 1, 0, 0, 0, 0, &time.Location{})
-//}
-//
-//func originFunc() {
-//	str := "Hi, origin func"
-//	fmt.Println(str)
-//}
-//func monkeyFunc() {
-//	str := "Hi, monkey func"
-//	fmt.Println(str)
-//	trampolineFunc()
-//}
-//func trampolineFunc() {
-//}
-
 func main() {
-	// FIXME panic
-	//originFunc()
-	//fmt.Println("-------")
-	//gohook.Hook(originFunc, monkeyFunc, trampolineFunc)
-	//originFunc()
-	//
-	//fmt.Println(time.Now())
-	//gohook.Hook(time.Now, myTime, nil)
-	//fmt.Println(time.Now())
-
 	if isInit {
 		Init()
 	}

@@ -124,8 +124,8 @@ var LoadClassList = func(packageOrFileName string, className string, ignoreError
 }
 
 var PRIMITIVE_CLASS_MAP = map[string]any{
-	"any":         nil,
-	"interface{}": nil,
+	"any":         (any)(nil),
+	"interface{}": (interface{})(nil),
 	"bool":        false,
 	"byte":        byte(0),
 	"int":         int(0),
@@ -137,8 +137,8 @@ var PRIMITIVE_CLASS_MAP = map[string]any{
 }
 
 var BASE_CLASS_MAP = map[string]any{
-	"any":         nil,
-	"interface{}": nil,
+	"any":         (any)(nil),
+	"interface{}": (interface{})(nil),
 	"bool":        false,
 	"byte":        byte(0),
 	"int":         int(0),
@@ -149,8 +149,8 @@ var BASE_CLASS_MAP = map[string]any{
 	"string":      "",
 }
 var CLASS_MAP = map[string]any{
-	"any":               nil,
-	"interface{}":       nil,
+	"any":               (any)(nil),
+	"interface{}":       (interface{})(nil),
 	"bool":              false,
 	"byte":              byte(0),
 	"int":               int(0),
@@ -703,12 +703,15 @@ var completeWithError = func(pkgName string, clsName string, methodName string, 
 	}
 }
 
+var PATTERN_NAME, _ = regexp.Compile("^[0-9a-zA-Z_]+$")
+
 func IsName(name string) bool {
-	if b, err := regexp.MatchString("^[0-9a-zA-Z_]+$", name); err == nil {
-		return b
-	} else {
-		return false
-	}
+	return PATTERN_NAME.MatchString(name)
+	//if b, err := regexp.MatchString("^[0-9a-zA-Z_]+$", name); err == nil {
+	//	return b
+	//} else {
+	//	return false
+	//}
 }
 
 func IsIntType(typ string) bool {
@@ -1695,6 +1698,8 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 	return nil, nil
 }
 
+var PATTERN_UPPER_CASE, _ = regexp.Compile("^[A-Z]+$")
+
 /**获取用 Class 分组的 Method 二级嵌套列表
  * @param pkgName
  * @param clsName
@@ -1732,6 +1737,9 @@ func getMethodListGroupByClass(pkgName string, clsName string, methodName string
 		countObj[KEY_CLASS_TOTAL] = classTotal
 		countObj[KEY_METHOD_TOTAL] = methodTotal
 	}
+
+	var codeStr = ""
+	var insCodeStr = ""
 
 	if len(allClassList) > 0 {
 		packageMap = map[string]any{}
@@ -1778,6 +1786,10 @@ func getMethodListGroupByClass(pkgName string, clsName string, methodName string
 			var clsObj = map[string]any{}
 
 			var cn = cls.Name() // fmt.Sprint(cls) // cls.String()
+			if len(cn) < 1 || !PATTERN_UPPER_CASE.MatchString(cn[0:1]) {
+				continue
+			}
+
 			clsObj[KEY_CLASS] = cn
 			//clsObj[KEY_TYPE] = trimType(cls.getGenericSuperclass())
 
@@ -1794,12 +1806,30 @@ func getMethodListGroupByClass(pkgName string, clsName string, methodName string
 			var k = v.Kind()
 			fmt.Println("k = ", k)
 
-			if (allMethod == false && argTypes != nil) || k == reflect.Func || strings.HasPrefix(t.String(), "func(") {
+			var ts = fmt.Sprint(cls)
+
+			var isFunc = k == reflect.Func || strings.HasPrefix(ts, "func(") || strings.HasPrefix(ts, "func ")
+
+			if !isFunc && (k == reflect.Struct || strings.Contains(ts, " struct{")) { // (k == reflect.Pointer && t.Underlying() != &types.Interface{})) {
+				var path = pkg + "." + cn
+				codeStr += "\n        " + `unitauto.CLASS_MAP["` + path + `"] = ` + path + "{};"
+				insCodeStr += `
+            if typ.AssignableTo(reflect.TypeOf(` + path + `{})) {
+                toV, err := unitauto.Convert[` + path + `](val, ` + path + `{});
+                return toV, err == nil;
+            };
+            if typ.AssignableTo(reflect.TypeOf(&` + path + `{})) {
+                toV, err := unitauto.Convert[*` + path + `](val, &` + path + `{});
+                return toV, err == nil;
+            };`
+			}
+
+			if (allMethod == false && argTypes != nil) || isFunc {
 				//var m = v
 				//if k == reflect.Struct {
 				//	m = v.MethodByName(methodName)
 				//}
-				var mObj = parseMethodObject(fmt.Sprint(cls), mock)
+				var mObj = parseMethodObject(ts, mock)
 				//if len(mObj) <= 0 {
 				//	mObj = parseMethodObject(m, mock)
 				//}
@@ -1810,6 +1840,16 @@ func getMethodListGroupByClass(pkgName string, clsName string, methodName string
 
 					if methodList != nil {
 						methodList = append(methodList, mObj)
+					}
+
+					if isFunc {
+						var n = GetStr(mObj, "name")
+						if len(n) < 1 || !PATTERN_UPPER_CASE.MatchString(n[0:1]) {
+							continue
+						}
+
+						var path = pkg + "." + n
+						codeStr += "\n        " + `unitauto.CLASS_MAP["` + path + `"] = ` + path + ";"
 					}
 				}
 			} else {
@@ -1832,6 +1872,16 @@ func getMethodListGroupByClass(pkgName string, clsName string, methodName string
 
 							if methodList != nil {
 								methodList = append(methodList, mObj)
+							}
+
+							if isFunc {
+								var n = GetStr(mObj, "name")
+								if len(n) < 1 || !PATTERN_UPPER_CASE.MatchString(n[0:1]) {
+									continue
+								}
+
+								var path = pkg + "." + n
+								codeStr += "\n        " + `unitauto.CLASS_MAP["` + path + `"] = ` + path + ";"
 							}
 						}
 					}
@@ -1873,6 +1923,20 @@ func getMethodListGroupByClass(pkgName string, clsName string, methodName string
 		countObj[KEY_CLASS_TOTAL] = classTotal
 		countObj[KEY_METHOD_TOTAL] = methodTotal
 	}
+
+	if len(strings.TrimSpace(insCodeStr)) > 1 {
+		codeStr += `
+
+        var GetInstanceVal = unitauto.GetInstanceValue;
+        unitauto.GetInstanceValue = func(typ reflect.Type, val any, reuse bool, proxy unitauto.InterfaceProxy) (any, bool) {
+` + insCodeStr + `
+
+            return GetInstanceVal(typ, val, reuse, proxy);
+        }`
+	}
+
+	countObj["ginCode"] = codeStr
+
 	return countObj, nil
 }
 
@@ -3059,11 +3123,12 @@ func FindClassList(packageOrFileName string, className string, ignoreError bool,
 	}
 
 	packageOrFileName = dot2Separator(packageOrFileName)
-	if !strings.HasPrefix(packageOrFileName, DEFAULT_MODULE_PATH) {
-		if len(packageOrFileName) <= 0 {
+	var nl = len(packageOrFileName)
+	if nl < 1 || packageOrFileName[0:1] == "/" {
+		if nl <= 1 {
 			packageOrFileName = DEFAULT_MODULE_PATH
 		} else {
-			packageOrFileName = DEFAULT_MODULE_PATH + "/" + packageOrFileName
+			packageOrFileName = DEFAULT_MODULE_PATH + packageOrFileName
 		}
 	}
 
@@ -3247,7 +3312,7 @@ func NewArgument(typ string, value any) Argument {
  * TODO 应该在 ParseMap(json, typ) 时代理 typ 内所有的 interface
  */
 type InterfaceProxy struct {
-	_ noCopy
+	_ noCopy // 如果 Proxy 内没有任何成员变量被修改值，则不需要
 	orderedmap.OrderedMap
 	//OrderedMap map[string]any
 	//reflect.Value
