@@ -516,7 +516,7 @@ InvokeMethod 执行方法
 func InvokeMethod(req map[string]any, instance any, listener Listener[any]) error {
 	defer func() {
 		if err := recover(); err != nil {
-			completeWithError("", "", "", 0, errors.New("unknown error ! "+fmt.Sprint(err)), listener)
+			completeWithError("", "", "", 0, errors.New(fmt.Sprint(err)), listener)
 		}
 	}()
 
@@ -598,12 +598,12 @@ func InvokeMethod(req map[string]any, instance any, listener Listener[any]) erro
 	}
 
 	if timeout > 0 {
-		timer := time.NewTimer(time.Duration(timeout))
+		timer := time.NewTimer(time.Duration(timeout) * time.Millisecond)
 		go func() {
 			<-timer.C
 			timer.Stop()
-			fmt.Println("子协程可以打印了，因为定时器的时间到")
 			completeWithError(pkgName, clsName, methodName, startTime, errors.New("处理超时，应该在期望时间 "+fmt.Sprint(timeout)+"ms 内！"), listener)
+			//panic("处理超时，应该在期望时间 " + fmt.Sprint(timeout) + "ms 内！")
 		}()
 	}
 
