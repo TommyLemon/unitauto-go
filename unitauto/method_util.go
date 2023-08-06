@@ -609,7 +609,9 @@ func InvokeMethod(req map[string]any, instance any, listener Listener[any]) erro
 		} else {
 			var cc any
 			if cc, err = GetInvokeClass(pkgName, cttName); err == nil {
-				instance, err = getInvokeResult(reflect.ValueOf(cc), typ, cttName, clsArgs, nil)
+				instance, err = getInvokeResult(reflect.ValueOf(cc), typ, cttName, clsArgs, func(data any, method *reflect.Method, proxy *InterfaceProxy, extras ...any) error {
+					return nil
+				})
 			}
 		}
 	}
