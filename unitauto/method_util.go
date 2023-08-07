@@ -575,7 +575,15 @@ func InvokeMethod(req map[string]any, instance any, listener Listener[any]) erro
 	var cn = clsName
 	if len(cn) <= 0 {
 		cn = methodName
+	} else if static_ {
+		if len(pkgName) <= 0 {
+			pkgName = cn
+		} else {
+			pkgName += "." + cn
+		}
+		cn = methodName
 	}
+
 	var cls, err = GetInvokeClass(pkgName, cn)
 	fmt.Println("cls = ", cls)
 	if err != nil || (cls == nil && this_ != nil) {
