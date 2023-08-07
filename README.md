@@ -9,6 +9,8 @@ UnitAuto Go Library for remote dependencies with GitHub repo, etc.
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225636134-a4daf4ec-9304-44d2-b09a-28497c815188.png">
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225636569-b508fa19-3973-4655-bd49-68742c4d09d0.png">
 
+**Demo:** https://github.com/TommyLemon/unitauto-go-demo
+
 #### 1. 在 go.mod 中添加 GitHub 仓库
 #### 1. Add the GitHub repository to go.mod
 ```go
@@ -41,4 +43,28 @@ then you can copy and pasted the "ginCode" into the project under test instead o
 https://github.com/TommyLemon/unitauto-go/blob/main/main.go
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225632360-ce953a58-22b1-4b4e-8b3d-0083edebc71a.png">
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225635146-f8dab9d1-76c5-421a-b45e-732e4923fd4d.png">
+
+<br />
+
+### 4. 关于作者
+### 4. Author
+[https://github.com/TommyLemon](https://github.com/TommyLemon)<br />
+<img width="1279" alt="image" src="https://user-images.githubusercontent.com/5738175/199979403-ace8b574-cd64-4582-8c19-b51571945214.png">
+
+如果有什么问题或建议可以 [去 APIAuto 提 issue](https://github.com/TommyLemon/APIAuto/issues)，交流技术，分享经验。<br >
+如果你解决了某些 bug，或者新增了一些功能，欢迎 [提 PR 贡献代码](https://github.com/Tencent/APIJSON/blob/master/CONTRIBUTING.md)，感激不尽。
+<br />
+If you have any questions or suggestions, you can [create an issue](https://github.com/TommyLemon/APIAuto/issues). <br >
+If you can added a feature or fixed a bug, please [create a pull request](https://github.com/TommyLemon/unitauto-go/pulls), thank you~
+
+
+### 5. 相关项目
+### 5. Link
+创作不易、坚持更难，右上角点 ⭐ Star 支持下吧，谢谢 ^_^
+
+[UnitAuto](https://github.com/TommyLemon/UnitAuto) 机器学习零代码单元测试平台，零代码、全方位、自动化 测试 方法/函数 的正确性、可用性和性能
+<br />
+[unitauto-go-demo](https://github.com/TommyLemon/unitauto-go-demo) UnitAuto Go Demo，提供用来做单元测试的业务函数
+<br />
+[unitauto-py](https://github.com/TommyLemon/unitauto-py) UnitAuto Python 库，可通过 pip 仓库等远程依赖
 
