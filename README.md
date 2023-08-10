@@ -70,6 +70,9 @@ If you can added a feature or fixed a bug, please [create a pull request](https:
 
 [APIJSON](https://github.com/Tencent/APIJSON) 🚀 腾讯零代码、全功能、强安全 ORM 库 🏆 后端接口和文档零代码，前端(客户端) 定制返回 JSON 的数据和结构
 
+[apijson-go](https://github.com/glennliao/apijson-go) Go 版 APIJSON， 基于Go(>=1.18) + GoFrame2, 支持查询、单表增删改、权限管理等
+
 [APIAuto](https://github.com/TommyLemon/APIAuto) 敏捷开发最强大易用的 HTTP 接口工具，机器学习零代码测试、生成代码与静态检查、生成文档与光标悬浮注释，集 文档、测试、Mock、调试、管理 于一体的一站式体验
 
 [SQLAuto](https://github.com/TommyLemon/SQLAuto) 智能零代码自动化测试 SQL 语句执行结果的数据库工具，任意增删改查、任意 SQL 模板变量、一键批量生成参数组合、快速构造大量测试数据
+
