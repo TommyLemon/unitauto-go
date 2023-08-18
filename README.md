@@ -25,11 +25,21 @@ UnitAuto Go Library for remote dependencies with GitHub repo, etc.
 ```sh
 	go get github.com/TommyLemon/unitauto-go@v1.0.0
 ```
+<br />
+
+#### 3. 启动单元测试服务
+#### 3. Start unit testing server
+https://github.com/TommyLemon/unitauto-go/blob/main/main.go#L7-L12
+```go
+func main() {
+	unitauto.Start(8082)
+}
+```
 
 <br />
 
-#### 3. 参考主项目文档来测试
-#### 3. Test by following the main repo
+#### 4. 参考主项目文档来测试
+#### 4. Test by following the main repo
 
 https://github.com/TommyLemon/UnitAuto
 
@@ -46,8 +56,8 @@ https://github.com/TommyLemon/unitauto-go/blob/main/main.go
 
 <br />
 
-### 4. 关于作者
-### 4. Author
+### 5. 关于作者
+### 5. Author
 [https://github.com/TommyLemon](https://github.com/TommyLemon)<br />
 <img width="1279" alt="image" src="https://user-images.githubusercontent.com/5738175/199979403-ace8b574-cd64-4582-8c19-b51571945214.png">
 
@@ -58,8 +68,8 @@ If you have any questions or suggestions, you can [create an issue](https://gith
 If you can added a feature or fixed a bug, please [create a pull request](https://github.com/TommyLemon/unitauto-go/pulls), thank you~
 
 
-### 5. 其它项目
-### 5. Link
+### 6. 其它项目
+### 6. Link
 创作不易、坚持更难，右上角点 ⭐ Star 支持下吧，谢谢 ^_^
 
 [UnitAuto](https://github.com/TommyLemon/UnitAuto) 机器学习零代码单元测试平台，零代码、全方位、自动化 测试 方法/函数 的正确性、可用性和性能
