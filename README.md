@@ -3,13 +3,36 @@ UnitAuto Go 库，可通过 GitHub 仓库等远程依赖。<br />
 UnitAuto Go Library for remote dependencies with GitHub repo, etc.
 
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225639582-76f8cf99-d603-4d93-ae19-77b9fd278a42.png">
+
+同步纯函数：<br />
+https://github.com/TommyLemon/unitauto-go/blob/main/unitauto/test/test_util.go#L25-L27
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225637162-779e64ee-46f8-41a0-b91a-c0e66d291398.png">
+
+struct 成员函数：<br />
+https://github.com/TommyLemon/unitauto-go/blob/main/unitauto/test/test_util.go#L88-L90
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225635650-f776dc3a-596c-4796-95d7-1ca1c2f02782.png">
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225635800-5909dfb7-17c1-45e2-94e5-7c2251aa4500.png">
+
+协程异步函数：<br />
+https://github.com/TommyLemon/unitauto-go/blob/main/unitauto/test/test_util.go#L33-L45
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225636134-a4daf4ec-9304-44d2-b09a-28497c815188.png">
+
+异步回调函数：<br />
+https://github.com/TommyLemon/unitauto-go/blob/main/unitauto/test/test_util.go#L72-L81
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225636569-b508fa19-3973-4655-bd49-68742c4d09d0.png">
 
+<br />
+
+覆盖率统计：<br />
+https://github.com/qiniu/goc/issues/349
+<img width="1495" alt="image" src="https://github.com/qiniu/goc/assets/5738175/77ed49f9-aa18-4cc9-82b8-31b7cba107b7">
+<img width="1495" alt="image" src="https://github.com/qiniu/goc/assets/5738175/07a8c278-980f-4b4f-96c4-df96f4f26a17">
+
+<br />
+
 **Demo:** https://github.com/TommyLemon/unitauto-go-demo
+
+<br />
 
 #### 1. 在 go.mod 中添加 GitHub 仓库
 #### 1. Add the GitHub repository to go.mod
