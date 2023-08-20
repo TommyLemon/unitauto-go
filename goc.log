@@ -1,0 +1,19 @@
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /static                   --> github.com/gin-gonic/gin.(*RouterGroup).StaticFile.func1 (3 handlers)
+[GIN-debug] HEAD   /static                   --> github.com/gin-gonic/gin.(*RouterGroup).StaticFile.func1 (3 handlers)
+[GIN-debug] POST   /v1/cover/register        --> github.com/qiniu/goc/pkg/cover.(*server).registerService-fm (3 handlers)
+[GIN-debug] GET    /v1/cover/profile         --> github.com/qiniu/goc/pkg/cover.(*server).profile-fm (3 handlers)
+[GIN-debug] POST   /v1/cover/profile         --> github.com/qiniu/goc/pkg/cover.(*server).profile-fm (3 handlers)
+[GIN-debug] POST   /v1/cover/clear           --> github.com/qiniu/goc/pkg/cover.(*server).clear-fm (3 handlers)
+[GIN-debug] POST   /v1/cover/init            --> github.com/qiniu/goc/pkg/cover.(*server).initSystem-fm (3 handlers)
+[GIN-debug] GET    /v1/cover/list            --> github.com/qiniu/goc/pkg/cover.(*server).listServices-fm (3 handlers)
+[GIN-debug] POST   /v1/cover/remove          --> github.com/qiniu/goc/pkg/cover.(*server).removeServices-fm (3 handlers)
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :7777
+[GIN] 2023/08/19 - 20:57:27 | 200 |   17.876833ms |       127.0.0.1 | POST     "/v1/cover/profile"
