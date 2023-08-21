@@ -5,25 +5,30 @@ UnitAuto Go Library for remote dependencies with GitHub repo, etc.
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225639582-76f8cf99-d603-4d93-ae19-77b9fd278a42.png">
 
 同步纯函数：<br />
+Sync pure function: <br />
 https://github.com/TommyLemon/unitauto-go/blob/main/unitauto/test/test_util.go#L25-L27
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225637162-779e64ee-46f8-41a0-b91a-c0e66d291398.png">
 
 struct 成员函数：<br />
+strcut member function: <br />
 https://github.com/TommyLemon/unitauto-go/blob/main/unitauto/test/test_util.go#L88-L90
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225635650-f776dc3a-596c-4796-95d7-1ca1c2f02782.png">
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225635800-5909dfb7-17c1-45e2-94e5-7c2251aa4500.png">
 
 协程异步函数：<br />
+goroutine function: <br />
 https://github.com/TommyLemon/unitauto-go/blob/main/unitauto/test/test_util.go#L33-L45
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225636134-a4daf4ec-9304-44d2-b09a-28497c815188.png">
 
 异步回调函数：<br />
+async callback function: <br />
 https://github.com/TommyLemon/unitauto-go/blob/main/unitauto/test/test_util.go#L72-L81
 <img width="1495" alt="image" src="https://user-images.githubusercontent.com/5738175/225636569-b508fa19-3973-4655-bd49-68742c4d09d0.png">
 
 <br />
 
-覆盖率统计：<br />
+代码覆盖率统计：<br />
+Code coverage: <br />
 https://github.com/qiniu/goc/issues/349
 <img width="1495" alt="image" src="https://github.com/qiniu/goc/assets/5738175/77ed49f9-aa18-4cc9-82b8-31b7cba107b7">
 <img width="1495" alt="image" src="https://github.com/qiniu/goc/assets/5738175/07a8c278-980f-4b4f-96c4-df96f4f26a17">
@@ -81,8 +86,8 @@ https://github.com/TommyLemon/unitauto-go/blob/main/main.go
 
 ### 5. 关于作者
 ### 5. Author
-[https://github.com/TommyLemon](https://github.com/TommyLemon)<br />
-<img width="1279" alt="image" src="https://user-images.githubusercontent.com/5738175/199979403-ace8b574-cd64-4582-8c19-b51571945214.png">
+[https://github.com/TommyLemon](https://github.com/TommyLemon) <br />
+<img width="1280" src="https://github.com/TommyLemon/unitauto-py/assets/5738175/e8ed6021-5f70-46bf-8d61-08c0d4d4dd9e">
 
 如果有什么问题或建议可以 [去 APIAuto 提 issue](https://github.com/TommyLemon/APIAuto/issues)，交流技术，分享经验。<br >
 如果你解决了某些 bug，或者新增了一些功能，欢迎 [提 PR 贡献代码](https://github.com/Tencent/APIJSON/blob/master/CONTRIBUTING.md)，感激不尽。
@@ -93,7 +98,8 @@ If you can added a feature or fixed a bug, please [create a pull request](https:
 
 ### 6. 其它项目
 ### 6. Link
-创作不易、坚持更难，右上角点 ⭐ Star 支持下吧，谢谢 ^_^
+创作不易、坚持更难，右上角点 ⭐ Star 支持下吧，谢谢 ^\_^ <br />
+Please ⭐ Star the repos that you like ^\_^ <br />
 
 [UnitAuto](https://github.com/TommyLemon/UnitAuto) 机器学习零代码单元测试平台，零代码、全方位、自动化 测试 方法/函数 的正确性、可用性和性能
 
