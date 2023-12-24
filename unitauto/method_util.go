@@ -57,7 +57,7 @@ var MSG_SUCCESS = "success"
 var KEY_LANGUAGE = "language"
 var KEY_REUSE = "reuse"
 var KEY_UI = "ui"
-var KEY_TIME = "time"
+var KEY_TIME = "@time"
 var KEY_TIMEOUT = "timeout"
 var KEY_PACKAGE = "package"
 var KEY_THIS = "this"
@@ -1300,8 +1300,8 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 						}
 
 						calledArgs[j] = map[string]any{
-							"type":  vt.String(),
-							"value": vv,
+							KEY_TYPE:  vt.String(),
+							KEY_VALUE: vv,
 						}
 					}
 
@@ -1311,8 +1311,8 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 					}
 
 					var callInfo = map[string]any{
-						"time":       callTime,
-						"methodArgs": calledArgs,
+						KEY_TIME:        callTime,
+						KEY_METHOD_ARGS: calledArgs,
 					}
 					fcm[KEY_CALL_MAP] = append(cm, callInfo)
 
