@@ -87,7 +87,7 @@ https://github.com/TommyLemon/unitauto-go/blob/main/main.go
 ### 5. 关于作者
 ### 5. Author
 [https://github.com/TommyLemon](https://github.com/TommyLemon) <br />
-<img width="1280" src="https://github.com/TommyLemon/unitauto-py/assets/5738175/e8ed6021-5f70-46bf-8d61-08c0d4d4dd9e">
+<img width="1280" src="https://github.com/TommyLemon/UIGO/assets/5738175/ec77df98-ff9b-43aa-b2f1-2fce2549d276">
 
 如果有什么问题或建议可以 [去 APIAuto 提 issue](https://github.com/TommyLemon/APIAuto/issues)，交流技术，分享经验。<br >
 如果你解决了某些 bug，或者新增了一些功能，欢迎 [提 PR 贡献代码](https://github.com/Tencent/APIJSON/blob/master/CONTRIBUTING.md)，感激不尽。
@@ -115,3 +115,4 @@ Please ⭐ Star the repos that you like ^\_^ <br />
 
 [SQLAuto](https://github.com/TommyLemon/SQLAuto) 智能零代码自动化测试 SQL 语句执行结果的数据库工具，任意增删改查、任意 SQL 模板变量、一键批量生成参数组合、快速构造大量测试数据
 
+[UIGO](https://github.com/TommyLemon/UIGO) 📱 零代码快准稳 UI 智能录制回放平台 🚀 自动兼容任意宽高比分辨率屏幕，自动精准等待网络请求，录制回放快、准、稳！
