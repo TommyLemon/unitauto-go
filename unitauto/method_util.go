@@ -2376,9 +2376,12 @@ func cast(obj any, typ reflect.Type) (any, error) {
 	}
 
 	if IsMapType(typ.String()) {
-		var s = fmt.Sprint(obj)
+		var b, err = json.Marshal(obj)
+		if err != nil {
+			var s = fmt.Sprintf("%q\n", obj)
+			b = []byte(s)
+		}
 
-		var b = []byte(s)
 		var m = map[string]any{}
 		if err := json.Unmarshal(b, m); err != nil {
 			return nil, err
@@ -2401,9 +2404,12 @@ func cast(obj any, typ reflect.Type) (any, error) {
 
 	var al = 0
 	if IsArrType(typ.String()) {
-		var s = fmt.Sprint(obj)
+		var b, err = json.Marshal(obj)
+		if err != nil {
+			var s = fmt.Sprintf("%q\n", obj)
+			b = []byte(s)
+		}
 
-		var b = []byte(s)
 		var a []any
 		if err := json.Unmarshal(b, &a); err != nil {
 			return nil, err
