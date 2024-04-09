@@ -1384,7 +1384,9 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 		}
 
 		var vt = val.Type()
-		if val.CanInt() {
+		if val.IsNil() {
+			vs[i] = nil
+		} else if val.CanInt() {
 			vs[i] = val.Int()
 		} else if val.CanFloat() {
 			vs[i] = val.Float()
