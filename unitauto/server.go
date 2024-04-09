@@ -28,6 +28,7 @@ func Init() {
 	CLASS_MAP["fmt.Errorf"] = fmt.Errorf
 	CLASS_MAP["time.Unix"] = time.Unix
 	CLASS_MAP["regexp.MatchString"] = regexp.MatchString
+	CLASS_MAP["unitauto.ParseArr"] = ParseArr
 
 	CLASS_MAP["unitauto.test.Hello"] = test.Hello
 	CLASS_MAP["unitauto.test.Add"] = test.Add

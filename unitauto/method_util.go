@@ -1392,6 +1392,13 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 			vs[i] = val.Bool()
 		} else if vt == TYPE_STRING {
 			vs[i] = val.String()
+		} else if vt == TYPE_ERROR || vt.String() == "error" {
+			//fn := val.MethodByName("Error")
+			//if fn.IsNil() || fn.IsZero() || ! fn.IsValid() {
+			vs[i] = fmt.Sprint(val)
+			//} else {
+			//	vs[i] = fmt.Sprint(fn.Call([]reflect.Value{}))
+			//}
 		} else if val.CanConvert(vt) {
 			vs[i] = val.Convert(vt)
 		} else {
@@ -2335,6 +2342,7 @@ var TYPE_INT64 = reflect.TypeOf(int64(0))
 var TYPE_FLOAT32 = reflect.TypeOf(float32(0.0))
 var TYPE_FLOAT64 = reflect.TypeOf(float64(0.0))
 var TYPE_STRING = reflect.TypeOf("")
+var TYPE_ERROR = reflect.TypeOf(errors.New(""))
 var TYPE_MAP_ANY_ANY = reflect.TypeOf(map[any]any{})
 var TYPE_MAP_STRING_ANY = reflect.TypeOf(map[string]any{})
 var TYPE_MAP_INTERFACE_INTERFACE = reflect.TypeOf(map[interface{}]interface{}{})
@@ -2404,6 +2412,11 @@ func cast(obj any, typ reflect.Type) (any, error) {
 
 	var al = 0
 	if IsArrType(typ.String()) {
+		//rt := reflect.TypeOf(obj)
+		//if IsArrType(rt.String()) {
+		// 这里没法用 len 函数	al = len(obj)
+		//}
+
 		var b, err = json.Marshal(obj)
 		if err != nil {
 			var s = fmt.Sprintf("%q\n", obj)
