@@ -1382,12 +1382,45 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 			vs[i] = val.Convert(returnType)
 			continue
 		}
+		if val.CanInterface() {
+			vs[i] = val.Interface()
+			continue
+		}
 
+		//k := val.Kind()
+		//switch k {
+		//case reflect.Bool:
+		//	vs[i] = val.Bool() // bool(p) // *(*bool)(p)
+		//case reflect.Uint:
+		//	vs[i] = uint(val.Pointer())
+		//case reflect.Uint8:
+		//	vs[i] = uint8(val.Pointer())
+		//case reflect.Uint16:
+		//	vs[i] = uint16(val.Pointer())
+		//case reflect.Uint32:
+		//	vs[i] = uint32(val.Pointer())
+		//case reflect.Uint64:
+		//	vs[i] = uint64(val.Pointer())
+		//case reflect.Uintptr:
+		//	vs[i] = val.Pointer()
+		//case reflect.Int:
+		//	vs[i] = int(val.Pointer())
+		//case reflect.Int8:
+		//	vs[i] = int8(val.Pointer())
+		//case reflect.Int16:
+		//	vs[i] = int16(val.Pointer())
+		//case reflect.Int32:
+		//	vs[i] = int32(val.Pointer())
+		//case reflect.Int64:
+		//	vs[i] = int64(val.Pointer())
+		//case reflect.String:
+		//	vs[i] = val.String()
+		//default:
 		var vt = val.Type()
-		if val.IsNil() {
-			vs[i] = nil
-		} else if val.CanInt() {
+		if val.CanInt() {
 			vs[i] = val.Int()
+		} else if val.CanUint() {
+			vs[i] = val.Uint()
 		} else if val.CanFloat() {
 			vs[i] = val.Float()
 		} else if vt == TYPE_BOOL {
@@ -1403,9 +1436,15 @@ func getInvokeResult(typ reflect.Value, returnType reflect.Type, methodName stri
 			//}
 		} else if val.CanConvert(vt) {
 			vs[i] = val.Convert(vt)
+		} else if val.IsZero() {
+			vs[i] = reflect.Zero(vt) // nil
+		} else if val.CanInterface() && val.IsNil() {
+			vs[i] = nil
 		} else {
 			vs[i] = reflect.Indirect(val)
 		}
+		//}
+
 	}
 
 	if vl == 1 {
@@ -2338,9 +2377,17 @@ var TYPE_METHOD = reflect.TypeOf(reflect.Method{})
 var TYPE_ANY = reflect.TypeOf((any)(nil))
 var TYPE_INTERFACE = TYPE_ANY
 var TYPE_BOOL = reflect.TypeOf(false)
+var TYPE_BYTE = reflect.TypeOf(byte(0))
 var TYPE_INT = reflect.TypeOf(int(0))
+var TYPE_INT8 = reflect.TypeOf(int8(0))
+var TYPE_INT16 = reflect.TypeOf(int16(0))
 var TYPE_INT32 = reflect.TypeOf(int32(0))
 var TYPE_INT64 = reflect.TypeOf(int64(0))
+var TYPE_UINT = reflect.TypeOf(uint(0))
+var TYPE_UINT8 = reflect.TypeOf(uint8(0))
+var TYPE_UINT16 = reflect.TypeOf(uint16(0))
+var TYPE_UINT32 = reflect.TypeOf(uint32(0))
+var TYPE_UINT64 = reflect.TypeOf(uint64(0))
 var TYPE_FLOAT32 = reflect.TypeOf(float32(0.0))
 var TYPE_FLOAT64 = reflect.TypeOf(float64(0.0))
 var TYPE_STRING = reflect.TypeOf("")
@@ -2352,9 +2399,17 @@ var TYPE_MAP_STRING_INTERFACE = reflect.TypeOf(map[string]interface{}{})
 var TYPE_ARR_ANY = reflect.TypeOf([]any{})
 var TYPE_ARR_INTERFACE = reflect.TypeOf([]interface{}{})
 var TYPE_ARR_BOOL = reflect.TypeOf([]bool{})
+var TYPE_ARR_BYTE = reflect.TypeOf([]byte{})
 var TYPE_ARR_INT = reflect.TypeOf([]int{})
+var TYPE_ARR_INT8 = reflect.TypeOf([]int8{})
+var TYPE_ARR_INT16 = reflect.TypeOf([]int16{})
 var TYPE_ARR_INT32 = reflect.TypeOf([]int32{})
 var TYPE_ARR_INT64 = reflect.TypeOf([]int64{})
+var TYPE_ARR_UINT = reflect.TypeOf([]uint{})
+var TYPE_ARR_UINT8 = reflect.TypeOf([]uint8{})
+var TYPE_ARR_UINT16 = reflect.TypeOf([]uint16{})
+var TYPE_ARR_UINT32 = reflect.TypeOf([]uint32{})
+var TYPE_ARR_UINT64 = reflect.TypeOf([]uint64{})
 var TYPE_ARR_FLOAT32 = reflect.TypeOf([]float32{})
 var TYPE_ARR_FLOAT64 = reflect.TypeOf([]float64{})
 var TYPE_ARR_STRING = reflect.TypeOf([]string{})
@@ -2440,12 +2495,28 @@ func cast(obj any, typ reflect.Type) (any, error) {
 		//	return false
 		//}
 		return obj.(bool), nil
+	case TYPE_BYTE:
+		return byte(obj.(float64)), nil
 	case TYPE_INT:
 		return int(obj.(float64)), nil
+	case TYPE_INT8:
+		return int8(obj.(float64)), nil
+	case TYPE_INT16:
+		return int16(obj.(float64)), nil
 	case TYPE_INT32:
 		return int32(obj.(float64)), nil
 	case TYPE_INT64:
 		return int64(obj.(float64)), nil
+	case TYPE_UINT:
+		return uint(obj.(float64)), nil
+	case TYPE_UINT8:
+		return uint8(obj.(float64)), nil
+	case TYPE_UINT16:
+		return uint16(obj.(float64)), nil
+	case TYPE_UINT32:
+		return uint32(obj.(float64)), nil
+	case TYPE_UINT64:
+		return uint64(obj.(float64)), nil
 	case TYPE_FLOAT32:
 		return float32(obj.(float64)), nil
 	case TYPE_FLOAT64:
@@ -2472,6 +2543,16 @@ func cast(obj any, typ reflect.Type) (any, error) {
 			}
 		}
 		return a, nil
+	case TYPE_ARR_BYTE:
+		var a = make([]byte, al)
+		for i, v := range obj.([]any) {
+			if v2, err := cast(v, TYPE_BYTE); err != nil {
+				return nil, err
+			} else {
+				a[i] = v2.(byte)
+			}
+		}
+		return a, nil
 	case TYPE_ARR_INT:
 		var a = make([]int, al)
 		for i, v := range obj.([]any) {
@@ -2482,10 +2563,30 @@ func cast(obj any, typ reflect.Type) (any, error) {
 			}
 		}
 		return a, nil
+	case TYPE_ARR_INT8:
+		var a = make([]int8, al)
+		for i, v := range obj.([]any) {
+			if v2, err := cast(v, TYPE_INT8); err != nil {
+				return nil, err
+			} else {
+				a[i] = v2.(int8)
+			}
+		}
+		return a, nil
+	case TYPE_ARR_INT16:
+		var a = make([]int16, al)
+		for i, v := range obj.([]any) {
+			if v2, err := cast(v, TYPE_INT16); err != nil {
+				return nil, err
+			} else {
+				a[i] = v2.(int16)
+			}
+		}
+		return a, nil
 	case TYPE_ARR_INT32:
 		var a = make([]int32, al)
 		for i, v := range obj.([]any) {
-			if v2, err := cast(v, TYPE_INT); err != nil {
+			if v2, err := cast(v, TYPE_INT32); err != nil {
 				return nil, err
 			} else {
 				a[i] = v2.(int32)
@@ -2495,17 +2596,67 @@ func cast(obj any, typ reflect.Type) (any, error) {
 	case TYPE_ARR_INT64:
 		var a = make([]int64, al)
 		for i, v := range obj.([]any) {
-			if v2, err := cast(v, TYPE_INT); err != nil {
+			if v2, err := cast(v, TYPE_INT64); err != nil {
 				return nil, err
 			} else {
 				a[i] = v2.(int64)
 			}
 		}
 		return a, nil
+	case TYPE_ARR_UINT:
+		var a = make([]uint, al)
+		for i, v := range obj.([]any) {
+			if v2, err := cast(v, TYPE_UINT); err != nil {
+				return nil, err
+			} else {
+				a[i] = v2.(uint)
+			}
+		}
+		return a, nil
+	case TYPE_ARR_UINT8:
+		var a = make([]uint8, al)
+		for i, v := range obj.([]any) {
+			if v2, err := cast(v, TYPE_UINT8); err != nil {
+				return nil, err
+			} else {
+				a[i] = v2.(uint8)
+			}
+		}
+		return a, nil
+	case TYPE_ARR_UINT16:
+		var a = make([]uint16, al)
+		for i, v := range obj.([]any) {
+			if v2, err := cast(v, TYPE_UINT16); err != nil {
+				return nil, err
+			} else {
+				a[i] = v2.(uint16)
+			}
+		}
+		return a, nil
+	case TYPE_ARR_UINT32:
+		var a = make([]uint32, al)
+		for i, v := range obj.([]any) {
+			if v2, err := cast(v, TYPE_UINT32); err != nil {
+				return nil, err
+			} else {
+				a[i] = v2.(uint32)
+			}
+		}
+		return a, nil
+	case TYPE_ARR_UINT64:
+		var a = make([]uint64, al)
+		for i, v := range obj.([]any) {
+			if v2, err := cast(v, TYPE_UINT64); err != nil {
+				return nil, err
+			} else {
+				a[i] = v2.(uint64)
+			}
+		}
+		return a, nil
 	case TYPE_ARR_FLOAT32:
 		var a = make([]float32, al)
 		for i, v := range obj.([]any) {
-			if v2, err := cast(v, TYPE_INT); err != nil {
+			if v2, err := cast(v, TYPE_FLOAT32); err != nil {
 				return nil, err
 			} else {
 				a[i] = v2.(float32)
@@ -2515,7 +2666,7 @@ func cast(obj any, typ reflect.Type) (any, error) {
 	case TYPE_ARR_FLOAT64:
 		var a = make([]float64, al)
 		for i, v := range obj.([]any) {
-			if v2, err := cast(v, TYPE_INT); err != nil {
+			if v2, err := cast(v, TYPE_FLOAT64); err != nil {
 				return nil, err
 			} else {
 				a[i] = v2.(float64)
